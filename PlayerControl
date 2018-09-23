@@ -1,26 +1,38 @@
-sing System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
-
 
 public class PlayerControl : MonoBehaviour {
 
     public float speed;
     public Text countText;
     public Text winText;
+    public Text scoreText;
+    public Transform wallMove;
+    public Transform startPoint;
+    public Transform endPoint;
+    //public Transform obstacleMove;
 
     private Rigidbody rb;
     private int count;
+    private int score;
+    private IEnumerator coroutine;
+    float startTime;
+    float distance;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        score = 0;
         count = 0;
-        SetCountText ();
+        SetCountText();
+        SetScoreText();
         winText.text = "";
-
+        startTime = Time.time;
+        distance = Vector3.Distance(startPoint.position, endPoint.position);
+        
+       
     }
 
     private void FixedUpdate()
@@ -28,14 +40,23 @@ public class PlayerControl : MonoBehaviour {
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
 
-        Vector3 movement = new Vector3 (moveHorizontal, 0.0f, moveVertical);
+        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
 
         rb.AddForce(movement * speed);
 
         if (Input.GetKey("escape"))
             Application.Quit();
 
+        float duration = Time.time - startTime;
+        float journey = duration / distance;
+        if (count == 10)
+            wallMove.transform.position = Vector3.Lerp(startPoint.position, endPoint.position, journey/5);
+            
+
+
     }
+
+   
 
     void OnTriggerEnter(Collider other)
     {
@@ -43,18 +64,31 @@ public class PlayerControl : MonoBehaviour {
         {
             other.gameObject.SetActive(false);
             count = count + 1;
+            score = score + 1;
             SetCountText();
+            SetScoreText();
+
+        }
+        if (other.gameObject.CompareTag("Bad Pick Up"))
+        {
+            other.gameObject.SetActive(false);
+            score = score - 1;
+            SetScoreText();
 
         }
     }
 
-    void SetCountText ()
+    void SetCountText()
     {
-        countText.text = "Count:" + count.ToString ();
-        if(count >= 10)
+        countText.text = "Count:" + count.ToString();
+        if (count >= 20)
         {
-            winText.text = "You Win!";
+            winText.text = "You Win!" + " You Got " + score + " Points!";
         }
+    }
+    void SetScoreText()
+    {
+        scoreText.text = "Score:" + score.ToString();
     }
 
 }
